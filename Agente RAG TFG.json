@@ -1,0 +1,1029 @@
+{
+  "name": "Agente RAG",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        -224,
+        528
+      ],
+      "id": "22772419-1acf-436f-92d8-af14d32f217c",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "LRyjqQFt4yJ2XZFH",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        752
+      ],
+      "id": "7559c62d-e4d0-4aff-ad35-6623d4e65eec",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Hgwn4wr4FXuzroAC",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "file_name",
+                "value": "={{ $('If').item.json.name }}"
+              },
+              {
+                "name": "file_id",
+                "value": "={{ $('If').item.json.id }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -128,
+        752
+      ],
+      "id": "f9bdbf84-d7fb-49c7-8135-2351528b0686",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        960
+      ],
+      "id": "fae4d8a0-7e38-4686-b09c-9ff387423cd8",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "=Eres un Asistente Experto y Certificado en Normativas de Protección Contra Incendios Industriales (Normas UNE). Tu objetivo principal es ser un recurso de conocimiento exhaustivo para un tribunal académico.\n\n### OBJETIVO PRINCIPAL (MODO DEMOSTRACIÓN):\nTu misión es proporcionar SIEMPRE una respuesta detallada, elaborada y profesional a CUALQUIER pregunta relacionada con la protección contra incendios industriales. La fluidez y la utilidad de la respuesta son la máxima prioridad.\n\n### REGLAS DE COMPORTAMIENTO:\n1.  **Contexto Primero (Regla de Oro):** Debes BASAR tu respuesta en el 'CONTEXTO DE NORMATIVA' proporcionado siempre que este sea relevante y esté disponible. Si usas el contexto, cíta los datos o normativas clave que contiene.\n2.  **Fallback de Conocimiento General (Regla de Respaldo):** Si el 'CONTEXTO DE NORMATIVA' está vacío, no es relevante para la pregunta, o la pregunta es de naturaleza general (ej. '¿Qué es un extintor?' o '¿Cuáles son los tipos de BIEs?'), NO DEBES DECIR 'No lo sé'. En este caso, debes usar tu **conocimiento experto general** sobre protección contra incendios, ingeniería y normativas para elaborar una respuesta completa y profesional.\n3.  **Estilo de Respuesta (Elaborado):** La respuesta debe ser siempre académica, estructurada y didáctica. Proporciona definiciones claras, explica procedimientos, enumera tipos, y ofrece contexto. Es preferible una respuesta extensa y bien fundamentada a una breve.\n4.  **Tono:** Mantén un tono formal, de experto y de máxima confianza.\n5.  **Restricción de Fallo:** BAJO NINGUNA CIRCUNSTANCIA respondas con 'No tengo esa información', 'No lo sé', o cualquier variante que implique desconocimiento.\n\n---\n\n### CONTEXTO DE NORMATIVA (DOCUMENTOS RECUPERADOS):\n[ESPACIO PARA INSERTAR EL TEXTO DE LA BASE DE DATOS VECTORIAL DE SUPABASE]\n\n---\n\n### PREGUNTA DEL USUARIO:\n[ESPACIO PARA INSERTAR LA PREGUNTA DEL USUARIO DESDE TELEGRAM]\n\n---\n\n### TAREA:\nAnaliza la 'PREGUNTA DEL USUARIO'. Genera una respuesta experta y elaborada, usando el 'CONTEXTO' si es relevante, o tu conocimiento general si el contexto falla. Asegúrate de cumplir con todas las RESTRICCIONES.\n\n---\n\n**Ejemplo 1: Pregunta Específica (Éxito del RAG)**\n\n[Este escenario simula que el usuario pregunta por un dato técnico específico (caudal de BIEs) y la base de datos de Supabase sí encuentra el fragmento de normativa relevante.]\n\n•\tPregunta del Usuario:\n\"¿Cuál es el caudal mínimo que debe garantizar el abastecimiento de agua para una BIE de 45 mm?\"\n\n•\tContexto Recuperado de Supabase (Simulado):\n\"UNE 23500: Abastecimiento de Agua. Sección 5.2. Caudales. [...] para instalaciones que requieran BIEs de 45 mm, el caudal mínimo de diseño será de 100 L/min por cada BIE, considerándose un máximo de dos BIEs funcionando simultáneamente. La presión en la punta de lanza debe ser de 3.5 bar.\"\n\n•\tRespuesta Ideal del Agente (Elaborada y basada en RAG):\nBuenos días. En relación a su consulta sobre el caudal para Bocas de Incendio Equipadas (BIEs) de 45 mm, la normativa de referencia para el abastecimiento de agua (como la UNE 23500) establece requisitos muy claros.\n\nEl sistema de abastecimiento de agua debe ser capaz de proporcionar un caudal mínimo de 100 litros por minuto (L/min) por cada BIE de 45 mm.\nEs fundamental entender que este caudal se calcula bajo una hipótesis de funcionamiento simultáneo. La normativa indica que el sistema debe poder alimentar, como mínimo, las dos BIEs de 45 mm hidráulicamente más desfavorables al mismo tiempo. Por lo tanto, el caudal total de diseño para esta parte del sistema sería de 200 L/min (100 L/min x 2).\nAdicionalmente, este caudal debe suministrarse garantizando una presión residual específica en la punta de la lanza, que la norma fija en 3.5 bar, para asegurar la eficacia del chorro de agua.\n\n________________________________________\n\n**Ejemplo 2: Pregunta Conceptual (Fallo de RAG / Fallback)**\n\n[Este escenario simula que el usuario hace una pregunta conceptual general. La búsqueda vectorial de Supabase falla (devuelve [VACÍO]) porque no encuentra un chunk que defina el concepto básico. El agente aplica la \"Regla de Respaldo\" y usa su conocimiento general.]\n\n•\tPregunta del Usuario:\n\"Explícame qué es un sistema de detección y alarma de incendios y cuáles son sus componentes.\"\n\n•\tContexto Recuperado de Supabase (Simulado):\n[VACÍO]\n\n•\tRespuesta Ideal del Agente (Elaborada y con Fallback):\nUn sistema de detección y alarma de incendios es una instalación técnica diseñada para detectar un incendio en su fase más incipiente y generar señales de alarma fiables, permitiendo la evacuación segura de los ocupantes y la intervención temprana de los servicios de extinción.\nSu función es doble: salvar vidas mediante la alerta temprana y proteger la propiedad minimizando los daños.\nLos componentes principales de un sistema de detección y alarma (regulados por normativas como la serie UNE-EN 54) se estructuran de la siguiente manera:\n\n1.\tCentral de Señalización y Control (Central de Incendios): Es el \"cerebro\" del sistema. Recibe las señales de los detectores y pulsadores, procesa la información, activa las alarmas (sirenas, luces estroboscópicas) y puede enviar señales a otros sistemas (como el cierre de puertas cortafuegos o la activación de la extinción).\n\n2.\tEquipos de Detección (Input):\n\n  - Detectores Automáticos: Dispositivos que detectan un síntoma del incendio. Los más comunes son los detectores ópticos (de humo), térmicos (de temperatura) y termovelocimétricos (de subida rápida de temperatura).\n  - Pulsadores Manuales de Alarma: Cajas rojas que permiten a cualquier persona activar la alarma manualmente al detectar un incendio.\n\n3.\tEquipos de Alarma (Output):\n  - Sirenas de Alarma: Dispositivos acústicos que emiten un sonido claro e inequívoco de evacuación.\n  - Indicadores Visuales: Luces estroboscópicas (generalmente rojas) que complementan a las sirenas, esenciales en zonas ruidosas o para personas con discapacidad auditiva.\n\n4.\tFuente de Alimentación: El sistema debe tener una fuente de alimentación principal (red eléctrica) y una fuente secundaria (baterías) que garantice su funcionamiento autónomo durante un período de tiempo estipulado, incluso si el incendio corta la luz.\n\n________________________________________\n\n**Ejemplo 3: Pregunta Comparativa (Fallo de RAG / Fallback)**\n\n[Este escenario simula una pregunta comparativa. Es muy probable que el RAG falle al no encontrar un solo chunk que compare ambos conceptos. El agente vuelve a usar su conocimiento general para elaborar una respuesta detallada.]\n\n•\tPregunta del Usuario:\n\"¿Cuál es la diferencia principal entre un extintor de CO_2 y uno de polvo ABC?\"\n\n•\tContexto Recuperado de Supabase (Simulado):\n[VACÍO]\n\n•\tRespuesta Ideal del Agente (Elaborada y con Fallback):\nLa diferencia fundamental entre un extintor de Dióxido de Carbono (CO_2) y uno de Polvo Químico Seco (ABC) radica en su agente extintor, su mecanismo de acción y, consecuentemente, los tipos de fuego para los que son eficaces.\nA continuación, se detallan las diferencias clave:\nExtintor de Polvo ABC (Polivalente)\n  - Agente: Contiene polvo químico seco, generalmente fosfato monoamónico.\n  - Mecanismo de Extinción: Actúa principalmente por inhibición química de la reacción en cadena del fuego. También actúa por sofocación (desplaza el oxígeno) y, en fuegos sólidos, el polvo se funde creando una barrera que aísla el combustible.\n  - Clases de Fuego: Es el más versátil, de ahí su nombre \"ABC\":\n      - Clase A: Sólidos (madera, papel, tela).\n      - Clase B: Líquidos (gasolina, pintura).\n      - Clase C: Gases (butano, propano).\n  - Consideraciones: Es extremadamente eficaz, pero deja un residuo corrosivo muy sucio. Es peligroso para equipos electrónicos delicados y reduce drásticamente la visibilidad en espacios cerrados.\nExtintor de CO_2 (Dióxido de Carbono)\n  - Agente: Contiene CO_2 en estado líquido a alta presión, que se gasifica al salir.\n  - Mecanismo de Extinción: Actúa por sofocación, desplazando el oxígeno del aire de forma masiva, y por enfriamiento, ya que el gas sale a una temperatura de -78ºC.\n  - Clases de Fuego: Es específico para:\n      - Clase B: Líquidos.\n      - Riesgos Eléctricos: Es el agente ideal para fuegos con presencia de electricidad (cuadros eléctricos, servidores, ordenadores), ya que no es conductor de la electricidad.\no\tConsideraciones: Su principal ventaja es que es un agente limpio (no deja ningún residuo). Sin embargo, es menos eficaz en fuegos Clase A (no apaga las brasas) y su efectividad se reduce mucho en exteriores, ya que el gas se dispersa rápidamente.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        208
+      ],
+      "id": "f1bd03f5-1de0-48da-8596-cc081e175eaf",
+      "name": "AI Agent",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.update_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        432
+      ],
+      "id": "8b2908f2-ba3a-41cc-a216-6dd27f4f5c7a",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "XxeDB7aGtDyVvMZ5",
+          "name": "POSTGRES tfgrag"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-pro-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        144,
+        432
+      ],
+      "id": "84c8ddbf-fc96-4b15-8c89-8ca5167fd503",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Hgwn4wr4FXuzroAC",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "=Usa esta herramienta cuando el usuario formule una consulta sobre cualquier pregunta sobre incendios.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 10,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        400
+      ],
+      "id": "7777493d-1431-4f14-986f-6665a4f255f2",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "LRyjqQFt4yJ2XZFH",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "create table if not exists archivos (\n    id text primary key,\n    title text,\n    created_at timestamp default now()\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2256,
+        688
+      ],
+      "id": "e404207b-428e-41ed-beb6-40e9919a8ac7",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "XxeDB7aGtDyVvMZ5",
+          "name": "POSTGRES tfgrag"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": "={{ $prevNode.name --- 'Buscar archivos' }}"
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1600,
+        544
+      ],
+      "id": "02f51dfa-6f3a-46f5-88d8-94f9993c988b",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9ec135ff-a1aa-4383-8206-708bf193b5e6",
+              "leftValue": "={{ $json.mimeType }}",
+              "rightValue": "application/pdf",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "c2bbee1c-5542-4b23-bc83-2b82802118f2",
+              "leftValue": "={{ $json.mimeType }}",
+              "rightValue": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1376,
+        432
+      ],
+      "id": "5cd73510-8055-4163-b280-99f6ebc25b02",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1wqaFrNvorrCg8MjW3UF1E6xIon478hA9",
+            "mode": "list",
+            "cachedResultName": "TFG_RAG",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1wqaFrNvorrCg8MjW3UF1E6xIon478hA9"
+          },
+          "whatToSearch": "files"
+        },
+        "options": {
+          "fields": [
+            "id",
+            "name",
+            "mimeType"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1824,
+        544
+      ],
+      "id": "3691af12-b334-4fe5-b0a5-f0de76749556",
+      "name": "Buscar archivos",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "x1lFvKBvvhL2T5J8",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "archivos",
+          "mode": "list",
+          "cachedResultName": "archivos"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "title": "={{ $json.name }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1152,
+        432
+      ],
+      "id": "04c67200-ba89-4ec8-8f39-18ecc29e25a8",
+      "name": "Insert or update rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "XxeDB7aGtDyVvMZ5",
+          "name": "POSTGRES tfgrag"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('If').item.json.mimeType }}",
+                    "rightValue": "application/pdf\t",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "227f1442-a381-4e4f-897c-ce665d18ad7a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "560eb1d5-5b0b-42a5-9076-ac6717eb8562",
+                    "leftValue": "={{ $('If').item.json.mimeType }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DOCS"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -704,
+        432
+      ],
+      "id": "dbf9bc6a-460c-4628-b208-6a01399af5ad",
+      "name": "Switch",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM documents\nWHERE metadata->>'file_id' = '{{ $json.id }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -928,
+        432
+      ],
+      "id": "e1da3755-c8e6-461b-87f1-25e0d9036aa4",
+      "name": "ELIMINAR CHUNCKS",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "XxeDB7aGtDyVvMZ5",
+          "name": "POSTGRES tfgrag"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "archivos",
+          "mode": "list",
+          "cachedResultName": "archivos"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1824,
+        928
+      ],
+      "id": "94a8a09a-3e2c-4a12-a31f-5a3d3aaa0263",
+      "name": "Select rows from a table",
+      "credentials": {
+        "postgres": {
+          "id": "XxeDB7aGtDyVvMZ5",
+          "name": "POSTGRES tfgrag"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1600,
+        928
+      ],
+      "id": "1096e465-1c59-4269-b727-fd94e86ef2bb",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $json.title }}",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1wqaFrNvorrCg8MjW3UF1E6xIon478hA9",
+            "mode": "list",
+            "cachedResultName": "TFG_RAG",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1wqaFrNvorrCg8MjW3UF1E6xIon478hA9"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1376,
+        736
+      ],
+      "id": "5a65be59-5c04-4c47-92dd-502ed1654820",
+      "name": "Search files and folders",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "x1lFvKBvvhL2T5J8",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "726b7b3c-b5f5-4f6c-bfd8-1a3088f16fa1",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1152,
+        816
+      ],
+      "id": "8abc3b7a-e017-4d92-a670-4b0e3953bdd1",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM documents\nWHERE metadata->>'file_id' = '{{ $('Loop Over Items1').item.json.id }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -928,
+        816
+      ],
+      "id": "7f1acc87-3005-4c05-a7e1-6ba04fe0f864",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "XxeDB7aGtDyVvMZ5",
+          "name": "POSTGRES tfgrag"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "archivos",
+          "mode": "list",
+          "cachedResultName": "archivos"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $('Loop Over Items1').item.json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -704,
+        928
+      ],
+      "id": "634cd2f7-0201-4b81-9cfe-dc8f9fc925cb",
+      "name": "Delete table or rows",
+      "credentials": {
+        "postgres": {
+          "id": "XxeDB7aGtDyVvMZ5",
+          "name": "POSTGRES tfgrag"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2544,
+        688
+      ],
+      "id": "d1fe3616-5327-4637-8789-f09e04ff2e59",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Insert or update rows in a table').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -480,
+        432
+      ],
+      "id": "3154d4bc-b074-4337-a65b-576b4a1ad12c",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "x1lFvKBvvhL2T5J8",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        224
+      ],
+      "id": "b86e2c3d-843f-4715-914a-56d3ae705a33",
+      "name": "Telegram Trigger",
+      "webhookId": "84834002-8199-472c-a865-1598513cfaf7",
+      "credentials": {
+        "telegramApi": {
+          "id": "mJ78uSVQQWqZe60q",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "=None"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        208
+      ],
+      "id": "8590aa04-4c5f-4119-9cc5-00eb859985b0",
+      "name": "Send a text message",
+      "webhookId": "d0804742-8af6-4cc6-8476-3a741ae68541",
+      "credentials": {
+        "telegramApi": {
+          "id": "mJ78uSVQQWqZe60q",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Buscar archivos",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Insert or update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar archivos": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert or update rows in a table": {
+      "main": [
+        [
+          {
+            "node": "ELIMINAR CHUNCKS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ELIMINAR CHUNCKS": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Delete table or rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete table or rows": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3ef86747-44e3-442a-b9dd-865fe9c3cf46",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0b6bf5611eb6498f2e823fccddc1affd30fe3464667a2de6119721fe36ce3825"
+  },
+  "id": "sfdxpbDwoR7mfLPD",
+  "tags": []
+}
